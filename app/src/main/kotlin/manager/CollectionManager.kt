@@ -9,15 +9,19 @@ class CollectionManager(
 ) {
     private val list = LinkedList<Product>()
     private var currProductId = 1L
+    private var currOrgId = 1L
 
     fun addProduct(product: Product) {
-        list.add(generateProductId(product))
+        list.add(generateId(product))
         io.println(list.toString())
     }
 
-    fun generateProductId(product: Product): Product {
-        val productId = product.copy(id = currProductId)
-        currProductId++
-        return productId
+    fun generateId(product: Product): Product {
+        val res =
+            product.copy(
+                id = currProductId++,
+                organization = product.organization.copy(id = currOrgId++),
+            )
+        return res
     }
 }
