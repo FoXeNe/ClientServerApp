@@ -4,6 +4,7 @@ import io.IOHandler
 import manager.CollectionManager
 import model.Product
 import reader.CoordinatesReader
+import reader.OrganizationReader
 import java.time.ZonedDateTime
 import java.util.LinkedList
 import kotlin.text.toLong
@@ -21,7 +22,7 @@ class ProductReader(
                 creationDate = ZonedDateTime.now(),
                 price = priceInput(),
                 unitOfMeasure = null,
-                manufacturer = Organization(1L, "test", "testtest", 10L),
+                organization = OrganizationReader(io).read(),
             )
         return newProduct
     }
