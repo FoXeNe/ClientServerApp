@@ -12,7 +12,7 @@ class Add(
     override val name = "add"
     override val description = "add product"
 
-    override fun execute(args: String?) {
+    override fun execute() {
         io.println("добавляем продукт")
         manager.addProduct(ProductReader(io).read())
     }
