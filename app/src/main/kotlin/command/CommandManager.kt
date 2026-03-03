@@ -21,4 +21,6 @@ class CommandManager {
             io.println("команда не найдена")
         }
     }
+
+    fun getCommands() = commands
 }
