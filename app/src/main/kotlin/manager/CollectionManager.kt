@@ -20,7 +20,7 @@ class CollectionManager(
         val res =
             product.copy(
                 id = currProductId++,
-                organization = product.organization.copy(id = currOrgId++),
+                manufacturer = product.manufacturer.copy(id = currOrgId++),
             )
         return res
     }

@@ -23,7 +23,7 @@ class ProductReader(
                 creationDate = ZonedDateTime.now(),
                 price = io.readLong("введите цену"),
                 unitOfMeasure = UnitOfMeasureReader(io).read(),
-                organization = OrganizationReader(io).read(),
+                manufacturer = OrganizationReader(io).read(),
             )
         return newProduct
     }

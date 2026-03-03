@@ -9,7 +9,7 @@ data class Product(
     val creationDate: java.time.ZonedDateTime, // Поле не может быть null, Значение этого поля должно генерироваться автоматически
     val price: Long, // Значение поля должно быть больше 0
     val unitOfMeasure: UnitOfMeasure?, // Поле может быть null
-    val organization: Organization, // Поле не может быть null
+    val manufacturer: Organization, // Поле не может быть null
 ) : Comparable<Product> {
     init {
         require(id > 0) { "id должен быть больше 0" }
