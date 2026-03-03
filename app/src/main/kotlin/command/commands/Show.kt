@@ -12,8 +12,12 @@ class Show(
     override val description = "show collection elements"
 
     override fun execute() {
-        for (product in collectionManager.getCollection()) {
-            io.println(product.toString())
+        if (collectionManager.getCollection().isNotEmpty()) {
+            for (product in collectionManager.getCollection()) {
+                io.println(product.toString())
+            }
+        } else {
+            io.println("коллекция пустая")
         }
     }
 }
