@@ -13,8 +13,6 @@ class Add(
     override val description = "add product"
 
     override fun execute() {
-        io.println("добавляем продукт")
         collectionManager.addProduct(ProductReader(io).read())
-        io.println(collectionManager.getCollection().toString())
     }
 }

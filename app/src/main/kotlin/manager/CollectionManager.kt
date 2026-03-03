@@ -13,6 +13,7 @@ class CollectionManager(
 
     fun addProduct(product: Product) {
         list.add(generateId(product))
+        io.println("продукт добавлен")
     }
 
     fun generateId(product: Product): Product {
