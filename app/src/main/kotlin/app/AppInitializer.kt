@@ -5,6 +5,7 @@ import command.commands.Add
 import command.commands.Clear
 import command.commands.Exit
 import command.commands.Help
+import command.commands.Show
 import io.IOHandler
 import manager.CollectionManager
 
@@ -20,5 +21,6 @@ class AppInitializer {
         commandManager.register(Exit(io) { app.stop() })
         commandManager.register(Clear(io, collectionManager))
         commandManager.register(Help(io, commandManager))
+        commandManager.register(Show(io, collectionManager))
     }
 }
