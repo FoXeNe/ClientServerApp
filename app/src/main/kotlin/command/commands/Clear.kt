@@ -3,18 +3,16 @@ package command.commands
 import command.Command
 import io.IOHandler
 import manager.CollectionManager
-import reader.ProductReader
 
-class Add(
+class Clear(
     private val io: IOHandler,
     private val collectionManager: CollectionManager,
 ) : Command {
-    override val name = "add"
-    override val description = "add product"
+    override val name = "clear"
+    override val description = "clear colletion"
 
     override fun execute() {
-        io.println("добавляем продукт")
-        collectionManager.addProduct(ProductReader(io).read())
+        collectionManager.getList().clear()
         io.println(collectionManager.getList().toString())
     }
 }

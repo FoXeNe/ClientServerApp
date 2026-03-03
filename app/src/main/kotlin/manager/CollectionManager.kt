@@ -13,7 +13,6 @@ class CollectionManager(
 
     fun addProduct(product: Product) {
         list.add(generateId(product))
-        io.println(list.toString())
     }
 
     fun generateId(product: Product): Product {
@@ -24,4 +23,6 @@ class CollectionManager(
             )
         return res
     }
+
+    fun getList(): LinkedList<Product> = list
 }
