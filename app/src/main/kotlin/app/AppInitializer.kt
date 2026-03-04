@@ -5,6 +5,7 @@ import command.commands.Add
 import command.commands.Clear
 import command.commands.Exit
 import command.commands.Help
+import command.commands.History
 import command.commands.Info
 import command.commands.RemoveById
 import command.commands.RemoveFirst
@@ -30,5 +31,6 @@ class AppInitializer {
         commandManager.register(Update(io, collectionManager))
         commandManager.register(RemoveById(io, collectionManager))
         commandManager.register(RemoveFirst(io, collectionManager))
+        commandManager.register(History(io, commandManager))
     }
 }
