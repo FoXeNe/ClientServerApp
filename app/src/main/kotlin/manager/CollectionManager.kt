@@ -59,6 +59,11 @@ class CollectionManager(
         io.println("элемент удален")
     }
 
+    fun removeFirst() {
+        list.removeFirst()
+        io.println("первый элемент удален")
+    }
+
     fun getCollection(): LinkedList<Product> = list
 
     fun clear() {
