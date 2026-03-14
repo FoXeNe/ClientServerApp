@@ -7,8 +7,8 @@ class CoordinatesReader(
     private val io: IOHandler,
 ) {
     fun read(): Coordinates {
-        var x = io.readLong("введите x")
-        var y = io.readFloat("введите y")
+        val x = io.readLong("введите x")
+        val y = io.readBoundFloat("введите y", 519f)
         return Coordinates(x, y)
     }
 }
