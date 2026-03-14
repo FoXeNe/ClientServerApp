@@ -32,5 +32,6 @@ class AppInitializer {
         commandManager.register(ExecuteScript(io, commandManager))
         commandManager.register(Show(io, collectionManager))
         commandManager.register(Update(io, collectionManager))
+        commandManager.register(Save(io, collectionManager))
     }
 }
