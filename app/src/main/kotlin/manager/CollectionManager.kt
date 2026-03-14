@@ -89,4 +89,12 @@ class CollectionManager(
     fun getCollection(): LinkedList<Product> = list
 
     fun getMinProduct(): Product? = list.minOrNull()
+
+    fun sumOfPrice(): Long {
+        var res = 0L
+        for (i in list) {
+            res += i.price
+        }
+        return res
+    }
 }
