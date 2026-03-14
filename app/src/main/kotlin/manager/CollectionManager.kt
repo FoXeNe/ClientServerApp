@@ -60,4 +60,6 @@ class CollectionManager(
         list.clear()
         io.println("коллекция очищена")
     }
+
+    fun getCollection(): LinkedList<Product> = list
 }
