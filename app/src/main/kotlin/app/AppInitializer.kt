@@ -5,13 +5,20 @@ import io.IOWrapper
 import manager.CollectionManager
 import manager.CommandManager
 
+const val ENV_FILE = "COLLECTION_FILE"
+
 class AppInitializer {
     fun setup(
         commandManager: CommandManager,
         io: IOWrapper,
         app: AppExecutor,
     ) {
-        val collectionManager = CollectionManager(io)
+
+        val filePath = System.getenv(ENV_FILE)
+        if (filePath == null) {
+            io.println("$ENV_FILE не задан")
+        }
+        val collectionManager = CollectionManager(io, filePath)
 
         commandManager.register(Add(io, collectionManager))
         commandManager.register(Clear(io, collectionManager))
@@ -23,5 +30,7 @@ class AppInitializer {
         commandManager.register(Update(io, collectionManager))
         commandManager.register(Exit(io, { app.stop() }))
         commandManager.register(ExecuteScript(io, commandManager))
+        commandManager.register(Show(io, collectionManager))
+        commandManager.register(Update(io, collectionManager))
     }
 }
