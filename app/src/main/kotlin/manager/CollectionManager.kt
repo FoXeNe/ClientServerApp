@@ -87,4 +87,6 @@ class CollectionManager(
     }
 
     fun getCollection(): LinkedList<Product> = list
+
+    fun getMinProduct(): Product? = list.minOrNull()
 }
