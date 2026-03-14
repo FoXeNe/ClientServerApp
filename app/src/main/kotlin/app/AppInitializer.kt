@@ -1,6 +1,5 @@
 package app
 
-import command.CommandManager
 import command.commands.Add
 import command.commands.Clear
 import command.commands.Exit
@@ -13,6 +12,7 @@ import command.commands.Show
 import command.commands.Update
 import io.IOHandler
 import manager.CollectionManager
+import manager.CommandManager
 
 class AppInitializer {
     fun setup(

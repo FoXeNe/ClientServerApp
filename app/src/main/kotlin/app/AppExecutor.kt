@@ -1,8 +1,8 @@
 package app
 
 import app.AppInitializer
-import command.CommandManager
 import io.ConsoleHandler
+import manager.CommandManager
 
 class AppExecutor {
     var interactiveMode = true

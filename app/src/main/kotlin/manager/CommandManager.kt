@@ -1,5 +1,6 @@
-package command
+package manager
 
+import command.Command
 import io.IOHandler
 import java.util.LinkedList
 

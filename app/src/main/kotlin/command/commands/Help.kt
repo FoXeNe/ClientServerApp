@@ -1,8 +1,8 @@
 package command.commands
 
 import command.Command
-import command.CommandManager
 import io.IOHandler
+import manager.CommandManager
 
 class Help(
     private val io: IOHandler,
