@@ -14,6 +14,14 @@ interface IOHandler {
         }
     }
 
+    fun readPositiveLong(string: String): Long {
+        while (true) {
+            val value = readLong(string)
+            if (value > 0) return value
+            println("значение должно быть больше 0")
+        }
+    }
+
     fun readFloat(string: String): Float {
         while (true) {
             println(string)
