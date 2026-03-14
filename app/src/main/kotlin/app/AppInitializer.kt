@@ -22,5 +22,6 @@ class AppInitializer {
         commandManager.register(RemoveFirst(io, collectionManager))
         commandManager.register(Update(io, collectionManager))
         commandManager.register(Exit(io, { app.stop() }))
+        commandManager.register(ExecuteScript(io, commandManager))
     }
 }
