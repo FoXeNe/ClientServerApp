@@ -90,13 +90,7 @@ class CollectionManager(
 
     fun getMinProduct(): Product? = list.minOrNull()
 
-    fun sumOfPrice(): Long {
-        var res = 0L
-        for (i in list) {
-            res += i.price
-        }
-        return res
-    }
+    fun sumOfPrice(): Long = list.sumOf { it.price }
 
     fun filterByManufacturer(manufacturerName: String): List<Product> {
         val result = mutableListOf<Product>()
