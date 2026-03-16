@@ -72,7 +72,7 @@ class CollectionManager(
     }
 
     fun removeById(id: Long) {
-        list.removeAt(list.indexOfFirst { it.id == id })
+        list.removeAll { it.id == id }
         io.println("элемент удалён")
     }
 
