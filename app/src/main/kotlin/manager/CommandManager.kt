@@ -18,12 +18,8 @@ class CommandManager {
     ) {
         val resInput = input.trim().split(" ")
         val name = resInput[0]
-        var args: String
-        if (resInput.size > 1) {
-            args = resInput[1]
-        } else {
-            args = " "
-        }
+        val args = if (resInput.size > 1) resInput[1] else ""
+
         val command = commands[name]
 
         if (command != null) {
