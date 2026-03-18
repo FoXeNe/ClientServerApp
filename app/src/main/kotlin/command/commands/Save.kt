@@ -3,22 +3,43 @@ package command.commands
 import command.Command
 import io.IOHandler
 import manager.CollectionManager
-import manager.JsonManager
+import manager.FileManager
+import manager.WalManager
 
 class Save(
     private val io: IOHandler,
     private val collectionManager: CollectionManager,
-    private val filePath: String?,
+    private val fileManager: FileManager,
+    private val walManager: WalManager,
 ) : Command {
     override val name = "save"
     override val description = "save collection to the file"
 
     override fun execute(args: String) {
-        if (filePath == null) {
-            io.println("путь к файлу не задан")
-            return
+        val collection = collectionManager.getCollection()
+
+        if (fileManager.isUsingTempFile() && fileManager.isMainValid()) {
+            val merged = fileManager.restoreMainFile(collection)
+            if (merged != null) {
+                collectionManager.replaceCollection(merged)
+                walManager.clear()
+                return
+            }
         }
-        JsonManager(filePath).writeCollection(collectionManager.getCollection())
-        io.println("коллекция сохранена")
+
+        if (fileManager.tryWrite(collection)) {
+            if (!fileManager.isUsingTempFile()) {
+                walManager.clear()
+                io.println("коллекция сохранена")
+            } else {
+                io.println("коллекция сохранена во временный файл")
+            }
+        } else {
+            if (!fileManager.isUsingTempFile()) {
+                fileManager.offerTempFile(collection)
+            } else {
+                io.println("временный файл недоступен, данные не сохранены")
+            }
+        }
     }
 }

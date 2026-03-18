@@ -8,6 +8,7 @@ import java.util.LinkedList
 class CollectionManager(
     private val io: IOHandler,
     collection: LinkedList<Product> = LinkedList(),
+    private val walManager: WalManager? = null,
 ) {
     private val list = LinkedList<Product>(collection)
     private var currProductId: Long
@@ -20,7 +21,9 @@ class CollectionManager(
     }
 
     fun addProduct(product: Product) {
-        list.add(generateId(product))
+        val withId = generateId(product)
+        walManager?.append(WalEntry.Add(withId))
+        list.add(withId)
         io.println("продукт добавлен")
     }
 
@@ -43,26 +46,31 @@ class CollectionManager(
     ) {
         val index = list.indexOfFirst { it.id == id }
         val old = list[index]
-        list[index] =
+        val updated =
             newProduct.copy(
                 id = old.id,
                 creationDate = old.creationDate,
                 manufacturer = newProduct.manufacturer.copy(id = old.manufacturer.id),
             )
+        walManager?.append(WalEntry.Update(id, updated))
+        list[index] = updated
         io.println("элемент обновлён")
     }
 
     fun removeById(id: Long) {
+        walManager?.append(WalEntry.RemoveById(id))
         list.removeAll { it.id == id }
         io.println("элемент удалён")
     }
 
     fun removeFirst() {
+        walManager?.append(WalEntry.RemoveFirst)
         list.removeFirst()
         io.println("первый элемент удалён")
     }
 
     fun clear() {
+        walManager?.append(WalEntry.Clear)
         list.clear()
         io.println("коллекция очищена")
     }
@@ -91,5 +99,39 @@ class CollectionManager(
             }
         }
         return result
+    }
+
+    fun replayEntry(entry: WalEntry) {
+        when (entry) {
+            is WalEntry.Add -> {
+                list.add(entry.product)
+                if (entry.product.id >= currProductId) currProductId = entry.product.id + 1
+                if (entry.product.manufacturer.id >= currOrgId) currOrgId = entry.product.manufacturer.id + 1
+            }
+
+            is WalEntry.Update -> {
+                val index = list.indexOfFirst { it.id == entry.id }
+                if (index >= 0) list[index] = entry.product
+            }
+
+            is WalEntry.RemoveById -> {
+                list.removeAll { it.id == entry.id }
+            }
+
+            is WalEntry.RemoveFirst -> {
+                if (list.isNotEmpty()) list.removeFirst()
+            }
+
+            is WalEntry.Clear -> {
+                list.clear()
+            }
+        }
+    }
+
+    fun replaceCollection(newCollection: LinkedList<Product>) {
+        list.clear()
+        list.addAll(newCollection)
+        currProductId = if (list.isEmpty()) 1L else list.maxOf { it.id } + 1
+        currOrgId = if (list.isEmpty()) 1L else list.maxOf { it.manufacturer.id } + 1
     }
 }
