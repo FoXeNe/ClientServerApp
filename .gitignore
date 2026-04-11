@@ -7,3 +7,5 @@ app/bin
 
 # Ignore Kotlin plugin data
 .kotlin
+kls_database.db
+**/build
