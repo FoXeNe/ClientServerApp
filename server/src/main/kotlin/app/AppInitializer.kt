@@ -19,12 +19,9 @@ class AppInitializer {
         app: AppExecutor,
     ) {
         val filePath = System.getenv(ENV_FILE)
-
         val walPath = createWalPath(filePath)
         val walManager = WalManager(walPath)
-
         val fileManager = FileManager(filePath, io)
-
         val baseCollection =
             if (filePath != null) {
                 try {

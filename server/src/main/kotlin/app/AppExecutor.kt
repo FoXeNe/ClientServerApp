@@ -3,6 +3,7 @@ package app
 import io.ConsoleHandler
 import io.IOWrapper
 import manager.CommandManager
+import manager.ConnectionManager
 
 class AppExecutor {
     var interactiveMode = true
@@ -10,6 +11,9 @@ class AppExecutor {
     fun exec() {
         val io = IOWrapper(ConsoleHandler())
         val manager = CommandManager()
+        val connManager = ConnectionManager("localhost", 9090)
+
+        connManager.exec()
 
         AppInitializer().setup(manager, io, this)
 
