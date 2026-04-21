@@ -1,5 +1,6 @@
 package model
 
+import java.io.Serializable
 import java.time.ZonedDateTime
 
 data class Product(
@@ -10,7 +11,10 @@ data class Product(
     val price: Long, // Значение поля должно быть больше 0
     val unitOfMeasure: UnitOfMeasure?, // Поле может быть null
     val manufacturer: Organization, // Поле не может быть null
-) : Comparable<Product> {
+) : Comparable<Product>, Serializable {
+    companion object {
+        private const val serialVersionUID = 1L
+    }
     init {
         require(id > 0) { "id должен быть больше 0" }
         require(name.isNotBlank()) { "имя продукта не должно быть пустым" }
