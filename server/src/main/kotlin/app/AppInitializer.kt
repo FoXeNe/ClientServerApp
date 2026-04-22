@@ -6,18 +6,22 @@ import manager.CollectionManager
 import manager.CommandManager
 import manager.FileManager
 import manager.JsonManager
+import manager.RequestHandler
 import manager.WalManager
 import java.io.File
 import java.util.LinkedList
+import java.util.logging.Logger
 
 const val ENV_FILE = "COLLECTION_FILE"
 
 class AppInitializer {
+    private val logger = Logger.getLogger(AppInitializer::class.java.name)
+
     fun setup(
         commandManager: CommandManager,
         io: IOWrapper,
         app: AppExecutor,
-    ) {
+    ): RequestHandler {
         val filePath = System.getenv(ENV_FILE)
         val walPath = createWalPath(filePath)
         val walManager = WalManager(walPath)
@@ -26,13 +30,16 @@ class AppInitializer {
             if (filePath != null) {
                 try {
                     val loaded = JsonManager(filePath).readCollection()
+                    logger.info("коллекция загружена из $filePath")
                     io.println("коллекция загружена")
                     loaded
                 } catch (e: Exception) {
+                    logger.warning("не удалось загрузить коллекцию: ${e.message}")
                     io.println("не удалось загрузить коллекцию из файла: ${e.message}")
                     LinkedList()
                 }
             } else {
+                logger.info("путь к файлу не задан")
                 io.println("коллекция не загружена")
                 LinkedList()
             }
@@ -44,6 +51,7 @@ class AppInitializer {
             for (entry in entries) {
                 collectionManager.replayEntry(entry)
             }
+            logger.info("операции восстановлены из журнала")
             io.println("операции восстановлены из журнала")
         }
 
@@ -59,6 +67,8 @@ class AppInitializer {
         commandManager.register(FilterByManufacturer(io, collectionManager))
         commandManager.register(FilterGreaterThanManufacturer(io, collectionManager))
         commandManager.register(AddIfMin(io, collectionManager))
+
+        return RequestHandler(collectionManager)
     }
 
     private fun createWalPath(mainFilePath: String?): String =
