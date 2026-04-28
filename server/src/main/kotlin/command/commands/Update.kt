@@ -3,6 +3,8 @@ package command.commands
 import command.Command
 import io.IOHandler
 import manager.CollectionManager
+import model.CommandResult
+import model.Product
 import reader.ProductReader
 
 class Update(
@@ -12,19 +14,18 @@ class Update(
     override val name = "update"
     override val description = "update element by id"
 
-    override fun execute(args: String) {
-        val id = args.trim().toLongOrNull()
-        if (id == null) {
-            io.println("введите id, к примеру: update 5")
-            return
-        }
-
+    override fun execute(
+        args: String,
+        product: Product?,
+    ): CommandResult {
+        val id =
+            args.trim().toLongOrNull()
+                ?: return CommandResult(false, "введите id, к примеру: update 5")
         if (collectionManager.getCollection().none { it.id == id }) {
-            io.println("элемент с id=$id не найден")
-            return
+            return CommandResult(false, "элемент с id=$id не найден")
         }
-        val newProduct = ProductReader(io).read()
-
-        collectionManager.updateById(id, newProduct)
+        val p = product ?: ProductReader(io).read()
+        collectionManager.updateById(id, p)
+        return CommandResult(true, "элемент обновлён")
     }
 }

@@ -1,27 +1,29 @@
 package command.commands
 
 import command.Command
-import io.IOHandler
 import manager.CollectionManager
+import model.CommandResult
+import model.Product
 
 class FilterByManufacturer(
-    private val io: IOHandler,
     private val collectionManager: CollectionManager,
 ) : Command {
     override val name = "filter_by_manufacturer"
     override val description = "display the elements whose manufacturer field value matches value"
 
-    override fun execute(args: String) {
+    override fun execute(
+        args: String,
+        product: Product?,
+    ): CommandResult {
         val name = args.trim()
         if (name.isBlank()) {
-            io.println("укажите имя производителя, например: filter_by_manufacturer NAME")
-            return
+            return CommandResult(false, "укажите имя производителя, например: filter_by_manufacturer NAME")
         }
-        val result = collectionManager.filterByManufacturer(name)
-        if (result.isEmpty()) {
-            io.println("элементов с таким производителем не найдено")
+        val result = collectionManager.filterByManufacturer(name).sorted()
+        return if (result.isEmpty()) {
+            CommandResult(true, "элементов с таким производителем не найдено")
         } else {
-            result.forEach { io.println(it.toString()) }
+            CommandResult(true, "найдено: ${result.size}", result)
         }
     }
 }

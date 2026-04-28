@@ -1,17 +1,21 @@
 package command.commands
 
 import command.Command
-import io.IOHandler
 import manager.CollectionManager
+import model.CommandResult
+import model.Product
 
 class Clear(
-    private val io: IOHandler,
     private val collectionManager: CollectionManager,
 ) : Command {
     override val name = "clear"
     override val description = "clear colletion"
 
-    override fun execute(args: String) {
+    override fun execute(
+        args: String,
+        product: Product?,
+    ): CommandResult {
         collectionManager.clear()
+        return CommandResult(true, "коллекция очищена")
     }
 }
