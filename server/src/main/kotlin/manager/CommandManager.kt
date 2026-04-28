@@ -1,7 +1,7 @@
 package manager
 
 import command.Command
-import io.IOHandler
+import model.CommandResult
 import java.util.LinkedList
 
 class CommandManager {
@@ -12,22 +12,17 @@ class CommandManager {
         commands[command.name] = command
     }
 
-    fun initCommand(
-        input: String,
-        io: IOHandler,
-    ) {
+    fun initCommand(input: String): CommandResult {
         val resInput = input.trim().split(" ")
         val name = resInput[0]
         val args = if (resInput.size > 1) resInput[1] else ""
 
-        val command = commands[name]
+        val command =
+            commands[name]
+                ?: return CommandResult(false, "команда не найдена")
 
-        if (command != null) {
-            command.execute(args)
-            history.add(command)
-        } else {
-            io.println("команда не найдена")
-        }
+        history.add(command)
+        return command.execute(args)
     }
 
     fun getCommands() = commands

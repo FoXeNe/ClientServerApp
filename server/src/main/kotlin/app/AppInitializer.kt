@@ -8,6 +8,7 @@ import manager.FileManager
 import manager.JsonManager
 import manager.RequestHandler
 import manager.WalManager
+import model.Product
 import java.io.File
 import java.util.LinkedList
 import java.util.logging.Logger
@@ -26,23 +27,22 @@ class AppInitializer {
         val walPath = createWalPath(filePath)
         val walManager = WalManager(walPath)
         val fileManager = FileManager(filePath, io)
-        val baseCollection =
-            if (filePath != null) {
-                try {
-                    val loaded = JsonManager(filePath).readCollection()
-                    logger.info("коллекция загружена из $filePath")
-                    io.println("коллекция загружена")
-                    loaded
-                } catch (e: Exception) {
-                    logger.warning("не удалось загрузить коллекцию: ${e.message}")
-                    io.println("не удалось загрузить коллекцию из файла: ${e.message}")
-                    LinkedList()
-                }
-            } else {
-                logger.info("путь к файлу не задан")
-                io.println("коллекция не загружена")
-                LinkedList()
+        var baseCollection: LinkedList<Product>
+        if (filePath == null) {
+            logger.info("путь к файлу не задан")
+            io.println("коллекция не загружена")
+            baseCollection = LinkedList()
+        } else {
+            try {
+                baseCollection = JsonManager(filePath).readCollection()
+                logger.info("коллекция загружена из $filePath")
+                io.println("коллекция загружена")
+            } catch (e: Exception) {
+                logger.warning("не удалось загрузить коллекцию: ${e.message}")
+                io.println("не удалось загрузить коллекцию из файла: ${e.message}")
+                baseCollection = LinkedList()
             }
+        }
 
         val collectionManager = CollectionManager(io, baseCollection, walManager)
 
@@ -56,26 +56,26 @@ class AppInitializer {
         }
 
         commandManager.register(Add(io, collectionManager))
-        commandManager.register(Clear(io, collectionManager))
-        commandManager.register(Info(io, collectionManager))
-        commandManager.register(RemoveById(io, collectionManager))
-        commandManager.register(RemoveFirst(io, collectionManager))
-        commandManager.register(Update(io, collectionManager))
-        commandManager.register(Show(io, collectionManager))
-        commandManager.register(Save(io, collectionManager, fileManager, walManager))
-        commandManager.register(SumOfPrice(io, collectionManager))
-        commandManager.register(FilterByManufacturer(io, collectionManager))
-        commandManager.register(FilterGreaterThanManufacturer(io, collectionManager))
         commandManager.register(AddIfMin(io, collectionManager))
+        commandManager.register(Clear(collectionManager))
+        commandManager.register(FilterByManufacturer(collectionManager))
+        commandManager.register(FilterGreaterThanManufacturer(collectionManager))
+        commandManager.register(Info(collectionManager))
+        commandManager.register(RemoveById(collectionManager))
+        commandManager.register(RemoveFirst(collectionManager))
+        commandManager.register(Show(collectionManager))
+        commandManager.register(SumOfPrice(collectionManager))
+        commandManager.register(Update(io, collectionManager))
+        commandManager.register(Save(collectionManager, fileManager, walManager))
 
-        return RequestHandler(collectionManager)
+        return RequestHandler(commandManager)
     }
 
-    private fun createWalPath(mainFilePath: String?): String =
+    private fun createWalPath(mainFilePath: String?): String {
         if (mainFilePath != null) {
-            "$mainFilePath.wal"
-        } else {
-            val tmpDir = System.getProperty("java.io.tmpdir")
-            File(tmpDir, "collection_session.wal").absolutePath
+            return "$mainFilePath.wal"
         }
+        val tmpDir = System.getProperty("java.io.tmpdir")
+        return File(tmpDir, "collection_session.wal").absolutePath
+    }
 }
