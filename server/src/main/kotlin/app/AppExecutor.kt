@@ -28,7 +28,9 @@ class AppExecutor {
                 val input = consoleReader.readLine()
                 if (!input.isNullOrBlank()) {
                     logger.fine("команда: $input")
-                    manager.initCommand(input, io)
+                    val result = manager.initCommand(input)
+                    io.println(result.message)
+                    result.collection?.forEach { io.println(it.toString()) }
                 }
             }
         }
