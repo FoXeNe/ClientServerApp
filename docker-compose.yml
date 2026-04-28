@@ -1,0 +1,15 @@
+services:
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "9090:9090"
+    networks:
+      - proxy_net
+
+networks:
+  proxy_net:
+    ipam:
+      config:
+        - subnet: 192.168.1.0/24
