@@ -19,13 +19,12 @@ class NetworkManager(
     private var out = DataOutputStream(socket.getOutputStream())
     private var input = DataInputStream(socket.getInputStream())
 
-    fun sendRequest(request: Request): Response? {
-        return try {
+    fun sendRequest(request: Request): Response? =
+        try {
             send(request)
         } catch (e: IOException) {
             reconnectAndSend(request)
         }
-    }
 
     private fun reconnectAndSend(request: Request): Response? {
         try {
@@ -43,30 +42,24 @@ class NetworkManager(
     }
 
     private fun send(request: Request): Response {
-        val bytes = serialize(request)
-        out.writeInt(bytes.size)
-        out.write(bytes)
+        val byteOut = ByteArrayOutputStream()
+        val objOut = ObjectOutputStream(byteOut)
+        objOut.writeObject(request)
+        objOut.close()
+
+        val data = byteOut.toByteArray()
+        out.writeInt(data.size)
+        out.write(data)
         out.flush()
 
         val length = input.readInt()
         val responseBytes = ByteArray(length)
         input.readFully(responseBytes)
-        return deserialize(responseBytes)
-    }
 
-    private fun serialize(request: Request): ByteArray {
-        val baos = ByteArrayOutputStream()
-        val oos = ObjectOutputStream(baos)
-        oos.writeObject(request)
-        oos.close()
-        return baos.toByteArray()
-    }
-
-    private fun deserialize(bytes: ByteArray): Response {
-        val bais = ByteArrayInputStream(bytes)
-        val ois = ObjectInputStream(bais)
-        val obj = ois.readObject() as Response
-        ois.close()
-        return obj
+        val byteIn = ByteArrayInputStream(responseBytes)
+        val objIn = ObjectInputStream(byteIn)
+        val response = objIn.readObject() as Response
+        objIn.close()
+        return response
     }
 }
