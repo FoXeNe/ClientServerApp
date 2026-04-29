@@ -18,7 +18,8 @@ class AppExecutor {
         val manager = CommandManager()
 
         val requestHandler = AppInitializer().setup(manager, io, this)
-        val connManager = ConnectionManager("0.0.0.0", 9090, requestHandler)
+        val port = System.getenv("SERVER_PORT")?.toIntOrNull() ?: 9090
+        val connManager = ConnectionManager("0.0.0.0", port, requestHandler)
 
         val consoleReader = BufferedReader(InputStreamReader(System.`in`))
 
