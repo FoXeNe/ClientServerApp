@@ -8,16 +8,18 @@ import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
+import java.nio.channels.ClosedChannelException
 import java.nio.channels.ServerSocketChannel
 import java.nio.channels.SocketChannel
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import java.util.logging.Logger
 
 class ConnectionManager(
     private val addr: String,
     private val port: Int,
     private val requestHandler: RequestHandler,
-) {
+) : AutoCloseable {
     private val logger = Logger.getLogger(ConnectionManager::class.java.name)
     private val serverChannel = ServerSocketChannel.open()
     private val readPool = Executors.newFixedThreadPool(4)
@@ -30,15 +32,26 @@ class ConnectionManager(
     }
 
     fun exec() {
-        while (true) {
+        while (!serverChannel.socket().isClosed) {
             try {
                 val client = serverChannel.accept() ?: continue
                 logger.info("новое подключение: ${client.remoteAddress}")
                 readPool.submit { handleRead(client) }
+            } catch (e: ClosedChannelException) {
+                break
             } catch (e: Exception) {
                 logger.warning("ошибка accept: ${e.message}")
             }
         }
+    }
+
+    override fun close() {
+        logger.info("завершение работы ConnectionManager")
+        serverChannel.close()
+        readPool.shutdown()
+        processPool.shutdown()
+        if (!readPool.awaitTermination(5, TimeUnit.SECONDS)) readPool.shutdownNow()
+        if (!processPool.awaitTermination(5, TimeUnit.SECONDS)) processPool.shutdownNow()
     }
 
     private fun handleRead(channel: SocketChannel) {
@@ -46,7 +59,7 @@ class ConnectionManager(
             val msgBytes =
                 readCompleteMessage(channel) ?: run {
                     logger.info("клиент отключился: ${channel.remoteAddress}")
-                    try { channel.close() } catch (e: Exception) {}
+                    channel.close()
                     return
                 }
             logger.info("получен запрос от ${channel.remoteAddress}")
@@ -54,23 +67,16 @@ class ConnectionManager(
                 try {
                     val request = deserialize(msgBytes)
                     val response = requestHandler.handle(request)
-                    Thread {
-                        try {
-                            sendResponse(channel, response)
-                            readPool.submit { handleRead(channel) }
-                        } catch (e: Exception) {
-                            logger.warning("ошибка отправки: ${e.message}")
-                            try { channel.close() } catch (ex: Exception) {}
-                        }
-                    }.start()
+                    sendResponse(channel, response)
+                    readPool.submit { handleRead(channel) }
                 } catch (e: Exception) {
-                    logger.warning("ошибка обработки: ${e.message}")
-                    try { channel.close() } catch (ex: Exception) {}
+                    logger.warning("ошибка: ${e.message}")
+                    runCatching { channel.close() }
                 }
             }
         } catch (e: Exception) {
-            logger.warning("ошибка чтения: ${e.message}")
-            try { channel.close() } catch (ex: Exception) {}
+            logger.warning("ошибка: ${e.message}")
+            runCatching { channel.close() }
         }
     }
 
