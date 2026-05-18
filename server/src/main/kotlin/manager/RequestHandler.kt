@@ -46,4 +46,5 @@ class RequestHandler(
         } catch (e: Exception) {
             Response(false, "ошибка: ${e.message}")
         }
+    }
 }

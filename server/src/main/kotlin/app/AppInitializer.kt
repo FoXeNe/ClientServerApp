@@ -48,21 +48,21 @@ class AppInitializer {
         val initialData = db.loadAll()
         logger.info("загружено из БД: ${initialData.size} элементов")
 
-        val collectionManager = CollectionManager(db, initialData)
+        val collectionManager = CollectionManager(initialData)
 
-        commandManager.register(Add(io, collectionManager))
-        commandManager.register(AddIfMin(io, collectionManager))
-        commandManager.register(Clear(collectionManager))
+        commandManager.register(Add(io, db, collectionManager))
+        commandManager.register(AddIfMin(io, db, collectionManager))
+        commandManager.register(Clear(db, collectionManager))
         commandManager.register(FilterByManufacturer(collectionManager))
         commandManager.register(FilterGreaterThanManufacturer(collectionManager))
         commandManager.register(Info(collectionManager))
         commandManager.register(Login())
         commandManager.register(Register())
-        commandManager.register(RemoveById(collectionManager))
-        commandManager.register(RemoveFirst(collectionManager))
+        commandManager.register(RemoveById(db, collectionManager))
+        commandManager.register(RemoveFirst(db, collectionManager))
         commandManager.register(Show(collectionManager))
         commandManager.register(SumOfPrice(collectionManager))
-        commandManager.register(Update(io, collectionManager))
+        commandManager.register(Update(io, db, collectionManager))
 
         return RequestHandler(commandManager, userManager)
     }

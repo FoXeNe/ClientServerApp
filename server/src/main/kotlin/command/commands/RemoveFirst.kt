@@ -2,10 +2,12 @@ package command.commands
 
 import command.Command
 import manager.CollectionManager
+import manager.DatabaseManager
 import model.CommandResult
 import model.Product
 
 class RemoveFirst(
+    private val db: DatabaseManager,
     private val collectionManager: CollectionManager,
 ) : Command {
     override val name = "remove_first"
@@ -17,14 +19,10 @@ class RemoveFirst(
         ownerLogin: String?,
     ): CommandResult {
         val owner = ownerLogin ?: return CommandResult(false, "требуется авторизация")
-        val collection = collectionManager.getCollection()
-        if (collection.isEmpty()) return CommandResult(false, "коллекция пустая")
-        val first = collection.first()
+        val first = collectionManager.getFirst() ?: return CommandResult(false, "коллекция пустая")
         if (collectionManager.getOwner(first.id) != owner) return CommandResult(false, "первый элемент принадлежит другому пользователю")
-        return if (collectionManager.removeFirst(owner)) {
-            CommandResult(true, "первый элемент удалён")
-        } else {
-            CommandResult(false, "не удалось удалить первый элемент")
-        }
+        if (!db.deleteProduct(first.id, owner)) return CommandResult(false, "не удалось удалить первый элемент")
+        collectionManager.removeById(first.id, owner)
+        return CommandResult(true, "первый элемент удалён")
     }
 }
