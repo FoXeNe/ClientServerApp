@@ -2,14 +2,14 @@ package manager
 
 import java.security.MessageDigest
 
-class UserManager(private val db: DatabaseManager) {
+class UserManager(private val repo: UserRepository) {
     fun register(login: String, password: String): Boolean {
         if (login.isBlank() || password.isBlank()) return false
-        return db.registerUser(login, hash(password))
+        return repo.register(login, hash(password))
     }
 
     fun authenticate(login: String, password: String): Boolean {
-        val stored = db.getPasswordHash(login) ?: return false
+        val stored = repo.getPasswordHash(login) ?: return false
         return stored == hash(password)
     }
 

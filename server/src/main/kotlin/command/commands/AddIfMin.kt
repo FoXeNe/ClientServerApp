@@ -3,14 +3,14 @@ package command.commands
 import command.Command
 import io.IOHandler
 import manager.CollectionManager
-import manager.DatabaseManager
+import manager.ProductRepository
 import model.CommandResult
 import model.Product
 import reader.ProductReader
 
 class AddIfMin(
     private val io: IOHandler,
-    private val db: DatabaseManager,
+    private val db: ProductRepository,
     private val collectionManager: CollectionManager,
 ) : Command {
     override val name = "add_if_min"
@@ -25,7 +25,7 @@ class AddIfMin(
         val p = product ?: ProductReader(io).read()
         val min = collectionManager.getMinProduct()
         return if (min == null || p < min) {
-            val withId = db.insertProduct(p, owner)
+            val withId = db.insert(p, owner)
             collectionManager.addProduct(withId, owner)
             CommandResult(true, "продукт добавлен")
         } else {

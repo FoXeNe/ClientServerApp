@@ -3,14 +3,14 @@ package command.commands
 import command.Command
 import io.IOHandler
 import manager.CollectionManager
-import manager.DatabaseManager
+import manager.ProductRepository
 import model.CommandResult
 import model.Product
 import reader.ProductReader
 
 class Update(
     private val io: IOHandler,
-    private val db: DatabaseManager,
+    private val db: ProductRepository,
     private val collectionManager: CollectionManager,
 ) : Command {
     override val name = "update"
@@ -31,7 +31,7 @@ class Update(
             creationDate = old.creationDate,
             manufacturer = p.manufacturer.copy(id = old.manufacturer.id),
         )
-        if (!db.updateProduct(updated, owner)) return CommandResult(false, "не удалось обновить элемент")
+        if (!db.update(updated, owner)) return CommandResult(false, "не удалось обновить элемент")
         collectionManager.updateById(id, updated, owner)
         return CommandResult(true, "элемент обновлён")
     }

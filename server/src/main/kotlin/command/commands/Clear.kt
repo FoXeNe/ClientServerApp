@@ -2,12 +2,12 @@ package command.commands
 
 import command.Command
 import manager.CollectionManager
-import manager.DatabaseManager
+import manager.ProductRepository
 import model.CommandResult
 import model.Product
 
 class Clear(
-    private val db: DatabaseManager,
+    private val db: ProductRepository,
     private val collectionManager: CollectionManager,
 ) : Command {
     override val name = "clear"
@@ -19,7 +19,7 @@ class Clear(
         ownerLogin: String?,
     ): CommandResult {
         val owner = ownerLogin ?: return CommandResult(false, "требуется авторизация")
-        val count = db.clearUserProducts(owner)
+        val count = db.clearByOwner(owner)
         collectionManager.clear(owner)
         return CommandResult(true, "удалено элементов: $count")
     }

@@ -43,26 +43,26 @@ class AppInitializer {
 
         logger.info("подключение к бд")
         val db = connectWithRetry(url, dbUser, dbPassword)
-        val userManager = UserManager(db)
+        val userManager = UserManager(db.users)
 
-        val initialData = db.loadAll()
+        val initialData = db.products.loadAll()
         logger.info("загружено из БД: ${initialData.size} элементов")
 
         val collectionManager = CollectionManager(initialData)
 
-        commandManager.register(Add(io, db, collectionManager))
-        commandManager.register(AddIfMin(io, db, collectionManager))
-        commandManager.register(Clear(db, collectionManager))
+        commandManager.register(Add(io, db.products, collectionManager))
+        commandManager.register(AddIfMin(io, db.products, collectionManager))
+        commandManager.register(Clear(db.products, collectionManager))
         commandManager.register(FilterByManufacturer(collectionManager))
         commandManager.register(FilterGreaterThanManufacturer(collectionManager))
         commandManager.register(Info(collectionManager))
         commandManager.register(Login())
         commandManager.register(Register())
-        commandManager.register(RemoveById(db, collectionManager))
-        commandManager.register(RemoveFirst(db, collectionManager))
+        commandManager.register(RemoveById(db.products, collectionManager))
+        commandManager.register(RemoveFirst(db.products, collectionManager))
         commandManager.register(Show(collectionManager))
         commandManager.register(SumOfPrice(collectionManager))
-        commandManager.register(Update(io, db, collectionManager))
+        commandManager.register(Update(io, db.products, collectionManager))
 
         return RequestHandler(commandManager, userManager)
     }
