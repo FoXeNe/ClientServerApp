@@ -3,7 +3,11 @@ package manager
 import java.sql.DriverManager
 import java.util.logging.Logger
 
-class DatabaseManager(url: String, user: String, password: String) {
+class DatabaseManager(
+    url: String,
+    user: String,
+    password: String,
+) {
     private val logger = Logger.getLogger(DatabaseManager::class.java.name)
     private val connection = DriverManager.getConnection(url, user, password)
 
@@ -42,6 +46,6 @@ class DatabaseManager(url: String, user: String, password: String) {
                 )""",
             )
         }
-        logger.info("схема БД создана")
+        logger.info("схема создана")
     }
 }
