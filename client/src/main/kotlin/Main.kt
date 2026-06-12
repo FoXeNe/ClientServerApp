@@ -1,5 +1,7 @@
 import app.AppExecutor
 
 fun main() {
-    AppExecutor().exec()
+    val app = AppExecutor()
+    app.exec()
+    System.exit(app.getExitCode())
 }

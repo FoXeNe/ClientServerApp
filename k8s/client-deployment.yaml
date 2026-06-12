@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: client
+  template:
+    metadata:
+      labels:
+        app: client
+    spec:
+      containers:
+        - name: client
+          image: docker.io/library/clientapp:latest
+          imagePullPolicy: Never
+          stdin: true
+          tty: true
+          env:
+            - name: SERVER_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: SERVER_HOST
+            - name: SERVER_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: SERVER_PORT
+
