@@ -7,6 +7,7 @@ import manager.NetworkManager
 
 class AppExecutor {
     var interactiveMode = true
+    private var exitCode = 0
 
     fun exec() {
         val io = IOWrapper(ConsoleHandler())
@@ -31,5 +32,8 @@ class AppExecutor {
 
     fun stop() {
         interactiveMode = false
+        exitCode = 1
     }
+
+    fun getExitCode() = exitCode
 }
