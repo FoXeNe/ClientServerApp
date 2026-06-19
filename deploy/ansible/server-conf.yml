@@ -134,6 +134,20 @@
           - "password: {{ user_password }}"
           - "========================================================="
 
+    - name: copy script
+      ansible.builtin.copy:
+        src: deploy.sh
+        dest: /root/deploy.sh
+        mode: '0755'
+
+    - name: run script
+      ansible.builtin.shell: /root/deploy.sh
+      register: script_output
+
+    - name: script log
+      ansible.builtin.debug:
+        var: script_output.stdout_lines
+
   handlers:
     - name: restart ssh service
       service:
