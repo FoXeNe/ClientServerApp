@@ -1,4 +1,4 @@
-ervices:
+services:
   server:
     container_name: server_prod
     build:
