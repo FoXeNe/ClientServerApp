@@ -1,4 +1,4 @@
-services:
+ervices:
   server:
     container_name: server_prod
     build:
@@ -9,14 +9,22 @@ services:
     environment:
       - DB_HOST=pg
       - DB_PORT=5432
-      - DB_NAME=studs
-      - DB_USER=postgres
-      - DB_PASSWORD=postgres
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
       - SERVER_PORT=45205
     restart: unless-stopped
     networks:
       - app_net
- 
+
+  pg:
+    image: postgres:15-alpine
+    container_name: pg_prod
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    networks:
+      - app_net
 networks:
   app_net:
     driver: bridge
