@@ -11,3 +11,4 @@ kls_database.db
 **/build
 .env
 k8s/secret.yaml
+inventory.ini
