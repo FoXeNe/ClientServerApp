@@ -1,0 +1,141 @@
+---
+- name: basic server setup and hardening
+  hosts: prod_servers
+  gather_facts: false
+  become: true
+
+  vars:
+    username: "webdev"
+    ssh_port: 2222
+    local_pub_key_path: "~/.ssh/id_ed25519.pub"
+    local_priv_key_path: "~/.ssh/id_ed25519"
+
+  tasks:
+    - name: generate and freeze cleartext password
+      set_fact:
+        user_password: "{{ lookup('community.general.random_string', length=16, special=false) }}"
+
+    - name: update apt package cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: install required system packages and docker
+      apt:
+        name:
+          - sudo
+          - ufw
+          - git
+          - neovim
+          - docker.io
+          - openjdk-17-jdk-headless
+        state: present
+
+    - name: download new docker compose binary
+      get_url:
+        url: "https://github.com/docker/compose/releases/latest/download/docker-compose-Linux-x86_64"
+        dest: /usr/local/bin/docker-compose
+        mode: '0755'
+
+    - name: calculate password hash on the remote server
+      command: openssl passwd -6 "{{ user_password }}"
+      register: remote_password_hash
+      changed_when: false
+      no_log: true
+
+    - name: create a new user
+      user:
+        name: "{{ username }}"
+        shell: /bin/bash
+        groups: sudo
+        append: yes
+        password: "{{ remote_password_hash.stdout }}"
+        state: present
+
+    - name: add new user to docker group
+      user:
+        name: "{{ username }}"
+        groups: docker
+        append: yes
+
+    - name: set authorized ssh key for new user
+      ansible.posix.authorized_key:
+        user: "{{ username }}"
+        state: present
+        key: "{{ lookup('file', local_pub_key_path) }}"
+
+    - name: configure sudo privileges for the new user
+      copy:
+        content: "{{ username }} ALL=(ALL:ALL) ALL\n"
+        dest: "/etc/sudoers.d/{{ username }}"
+        mode: '0440'
+        validate: 'visudo -cf %s'
+
+    - name: allow web traffic ports in firewall
+      ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+      loop:
+        - '80'
+        - '443'
+
+    - name: allow temporary current ssh port and new custom port
+      ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+      loop:
+        - '22'
+        - "{{ ssh_port }}"
+
+    - name: enable ufw firewall and set default deny incoming policy
+      ufw:
+        state: enabled
+        policy: deny
+        direction: incoming
+
+    - name: configure ssh daemon settings
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: present
+        validate: 'sshd -t -f %s'
+      loop:
+        - { regexp: '^#?Port ', line: 'Port {{ ssh_port }}' }
+        - { regexp: '^#?PermitRootLogin ', line: 'PermitRootLogin no' }
+        - { regexp: '^#?PasswordAuthentication ', line: 'PasswordAuthentication no' }
+      notify: restart ssh service
+
+    - name: force ssh restart immediately
+      meta: flush_handlers
+
+    - name: switch ansible connection to new user and port
+      set_fact:
+        ansible_port: "{{ ssh_port }}"
+        ansible_user: "{{ username }}"
+        ansible_ssh_private_key_file: "{{ local_priv_key_path }}"
+        ansible_become_password: "{{ user_password }}"
+
+    - name: disable old ssh port in firewall
+      ufw:
+        rule: allow
+        port: '22'
+        proto: tcp
+        delete: true
+
+    - name: display generated login credentials
+      debug:
+        msg: 
+          - "========================================================="
+          - "username: {{ username }}"
+          - "ssh port: {{ ssh_port }}"
+          - "password: {{ user_password }}"
+          - "========================================================="
+
+  handlers:
+    - name: restart ssh service
+      service:
+        name: sshd
+        state: restarted
