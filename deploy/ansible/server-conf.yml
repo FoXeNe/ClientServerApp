@@ -71,15 +71,6 @@
         mode: '0440'
         validate: 'visudo -cf %s'
 
-    - name: allow web traffic ports in firewall
-      ufw:
-        rule: allow
-        port: "{{ item }}"
-        proto: tcp
-      loop:
-        - '80'
-        - '443'
-
     - name: allow temporary current ssh port and new custom port
       ufw:
         rule: allow
