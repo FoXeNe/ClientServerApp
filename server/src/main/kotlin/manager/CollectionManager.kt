@@ -22,7 +22,10 @@ class CollectionManager(
         }
     }
 
-    fun addProduct(product: Product, ownerLogin: String) {
+    fun addProduct(
+        product: Product,
+        ownerLogin: String,
+    ) {
         lock.writeLock().withLock {
             list.add(product)
             ownerMap[product.id] = ownerLogin
@@ -64,35 +67,35 @@ class CollectionManager(
 
     fun clear(ownerLogin: String) {
         lock.writeLock().withLock {
-            val toRemove = ownerMap.entries.filter { it.value == ownerLogin }.map { it.key }.toSet()
+            val toRemove =
+                ownerMap.entries
+                    .filter { it.value == ownerLogin }
+                    .map { it.key }
+                    .toSet()
             list.removeAll { it.id in toRemove }
             toRemove.forEach { ownerMap.remove(it) }
         }
     }
 
-    fun getCollection(): LinkedList<Product> =
-        lock.readLock().withLock { LinkedList(list) }
+    fun getCollection(): LinkedList<Product> = lock.readLock().withLock { LinkedList(list) }
 
-    fun getById(id: Long): Product? =
-        lock.readLock().withLock { list.find { it.id == id } }
+    fun getCollectionWithOwners(): List<Pair<Product, String>> =
+        lock.readLock().withLock {
+            list.map { it to (ownerMap[it.id] ?: "") }
+        }
 
-    fun getFirst(): Product? =
-        lock.readLock().withLock { list.firstOrNull() }
+    fun getById(id: Long): Product? = lock.readLock().withLock { list.find { it.id == id } }
+
+    fun getFirst(): Product? = lock.readLock().withLock { list.firstOrNull() }
 
     fun getMinProduct(): Product? =
         lock.readLock().withLock {
-            list
-                .stream()
-                .min(Comparator.naturalOrder())
-                .orElse(null)
+            list.stream().min(Comparator.naturalOrder()).orElse(null)
         }
 
     fun sumOfPrice(): Long =
         lock.readLock().withLock {
-            list
-                .stream()
-                .mapToLong { it.price }
-                .sum()
+            list.stream().mapToLong { it.price }.sum()
         }
 
     fun filterByManufacturer(manufacturerName: String): List<Product> =
@@ -111,9 +114,7 @@ class CollectionManager(
                 .collect(Collectors.toList())
         }
 
-    fun hasId(id: Long): Boolean =
-        lock.readLock().withLock { list.any { it.id == id } }
+    fun hasId(id: Long): Boolean = lock.readLock().withLock { list.any { it.id == id } }
 
-    fun getOwner(id: Long): String? =
-        lock.readLock().withLock { ownerMap[id] }
+    fun getOwner(id: Long): String? = lock.readLock().withLock { ownerMap[id] }
 }

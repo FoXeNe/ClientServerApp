@@ -1,7 +1,7 @@
 package manager
 
+import java.io.IOException
 import java.net.Socket
-import kotlin.system.exitProcess
 
 class ConnectionManager(
     private val host: String,
@@ -12,24 +12,17 @@ class ConnectionManager(
     fun connect(): Socket {
         var socket: Socket? = null
         var attempt = 0
+        var lastException: Exception? = null
 
-        println("waiting for the server")
-
-        while (socket == null) {
+        while (socket == null && attempt < maxAttempts) {
             try {
                 attempt++
                 socket = Socket(host, port)
-                println("connected to the server")
             } catch (e: Exception) {
-                if (attempt >= maxAttempts) {
-                    println("max attempts reached")
-                    exitProcess(1)
-                }
-
-                println("server is not reacheable, waiting...")
-                Thread.sleep(delay)
+                lastException = e
+                if (attempt < maxAttempts) Thread.sleep(delay)
             }
         }
-        return socket
+        return socket ?: throw IOException("Cannot connect to $host:$port after $maxAttempts attempts", lastException)
     }
 }

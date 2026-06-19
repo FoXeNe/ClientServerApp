@@ -15,9 +15,9 @@ class NetworkManager(
     private val host: String,
     private val port: Int,
 ) {
-    private var socket: Socket = ConnectionManager(host, port).connect()
-    private var out = DataOutputStream(socket.getOutputStream())
-    private var input = DataInputStream(socket.getInputStream())
+    private var socket: Socket? = null
+    private var out: DataOutputStream? = null
+    private var input: DataInputStream? = null
 
     var login: String? = null
     var password: String? = null
@@ -32,29 +32,43 @@ class NetworkManager(
 
     fun sendRequest(request: Request): Response? {
         val withCreds = request.copy(login = login, password = password)
-        return try {
-            send(withCreds)
-        } catch (e: IOException) {
-            reconnectAndSend(withCreds)
+        return trySend(withCreds)
+    }
+
+    fun sendRaw(request: Request): Response? = trySend(request)
+
+    fun resetConnection() {
+        synchronized(this) {
+            runCatching { socket?.close() }
+            socket = null
+            out = null
+            input = null
         }
     }
 
-    fun sendRaw(request: Request): Response? =
+    private fun trySend(request: Request): Response? = synchronized(this) {
+        ensureConnected()
         try {
             send(request)
-        } catch (e: IOException) {
+        } catch (e: Exception) {
             reconnectAndSend(request)
         }
+    }
+
+    private fun ensureConnected() {
+        if (socket == null || socket!!.isClosed) {
+            val s = Socket(host, port)
+            socket = s
+            out = DataOutputStream(s.getOutputStream())
+            input = DataInputStream(s.getInputStream())
+        }
+    }
 
     private fun reconnectAndSend(request: Request): Response? {
-        try {
-            socket.close()
-        } catch (e: Exception) {
-        }
+        runCatching { socket?.close() }
+        socket = null
         return try {
-            socket = ConnectionManager(host, port).connect()
-            out = DataOutputStream(socket.getOutputStream())
-            input = DataInputStream(socket.getInputStream())
+            ensureConnected()
             send(request)
         } catch (e: Exception) {
             null
@@ -63,23 +77,20 @@ class NetworkManager(
 
     private fun send(request: Request): Response {
         val byteOut = ByteArrayOutputStream()
-        val objOut = ObjectOutputStream(byteOut)
-        objOut.writeObject(request)
-        objOut.close()
+        ObjectOutputStream(byteOut).use { it.writeObject(request) }
 
         val data = byteOut.toByteArray()
-        out.writeInt(data.size)
-        out.write(data)
-        out.flush()
+        out!!.writeInt(data.size)
+        out!!.write(data)
+        out!!.flush()
 
-        val length = input.readInt()
+        val length = input!!.readInt()
+        if (length <= 0) throw IOException("Invalid response length: $length")
         val responseBytes = ByteArray(length)
-        input.readFully(responseBytes)
+        input!!.readFully(responseBytes)
 
-        val byteIn = ByteArrayInputStream(responseBytes)
-        val objIn = ObjectInputStream(byteIn)
-        val response = objIn.readObject() as Response
-        objIn.close()
-        return response
+        return ObjectInputStream(ByteArrayInputStream(responseBytes)).use {
+            it.readObject() as Response
+        }
     }
 }

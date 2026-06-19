@@ -16,13 +16,12 @@ class Show(
         product: Product?,
         ownerLogin: String?,
     ): CommandResult {
-        val sorted = collectionManager.getCollection().sorted()
-        val msg =
-            if (sorted.isEmpty()) {
-                "коллекция пустая"
-            } else {
-                "элементов: ${sorted.size}"
-            }
+        val sorted =
+            collectionManager
+                .getCollectionWithOwners()
+                .map { (p, owner) -> p.copy(owner = owner) }
+                .sorted()
+        val msg = if (sorted.isEmpty()) "коллекция пустая" else "элементов: ${sorted.size}"
         return CommandResult(true, msg, sorted)
     }
 }

@@ -1,7 +1,6 @@
-import app.AppExecutor
+import gui.MainApp
+import javafx.application.Application
 
-fun main() {
-    val app = AppExecutor()
-    app.exec()
-    System.exit(app.getExitCode())
+fun main(args: Array<String>) {
+    Application.launch(MainApp::class.java, *args)
 }
