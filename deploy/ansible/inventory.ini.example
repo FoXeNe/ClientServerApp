@@ -1,2 +1,5 @@
 [prod_servers]
-debian-server ansible_host=<ip> ansible_port=22 ansible_user=root ansible_password=""
+debian-server ansible_host=<ip> ansible_port=22 ansible_user=<user> ansible_password=<very-strong-password>
+
+[prod_servers:vars]
+ansible_ssh_common_args='-o StrictHostKeyChecking=no'
