@@ -1,0 +1,73 @@
+- name: deploy client server app
+  hosts: prod_servers
+  gather_facts: false
+  become: true
+
+  vars:
+    ansible_user: "webdev"
+    ansible_port: 2222
+    ansible_ssh_private_key_file: "~/.ssh/id_ed25519"
+    username: "webdev"
+    ssh_port: 2222
+    db_port: 5432
+    db_name: "studs"
+    db_user: "postgres"
+    db_password: "postgres"
+
+  vars_prompt:
+    - name: ansible_become_password
+      prompt: "sudo password for {{ ansible_user }}"
+      private: yes
+
+  tasks:
+    - name: update apt package cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: install required system packages and docker
+      apt:
+        name:
+          - git
+          - neovim
+          - docker.io
+          - docker-compose
+        state: present
+
+    - name: add user to docker group
+      user:
+        name: "{{ username }}"
+        groups: docker
+        append: yes
+
+    - name: update ufw rules for ssh
+      ufw:
+        rule: allow
+        port: "{{ item.port }}"
+        proto: tcp
+        delete: "{{ item.delete }}"
+      loop:
+        - { port: "{{ ssh_port }}", delete: false }
+        - { port: '22', delete: true }
+
+    - name: clone repository and checkout target branch
+      ansible.builtin.git:
+        repo: "https://github.com/FoXeNe/ClientServerApp.git"
+        dest: /opt/ClientServerApp
+        version: feat/deploy
+        force: yes
+
+    - name: generate environment variables file
+      ansible.builtin.copy:
+        dest: /opt/ClientServerApp/.env
+        content: |
+          DB_PORT={{ db_port }}
+          DB_NAME={{ db_name }}
+          DB_USER={{ db_user }}
+          DB_PASSWORD={{ db_password }}
+        mode: '0600'
+
+    - name: start application via docker compose
+      ansible.builtin.command:
+        cmd: docker-compose up -d
+        chdir: /opt/ClientServerApp
