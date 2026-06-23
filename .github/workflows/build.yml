@@ -40,5 +40,15 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -p 2222 ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
+      - name: create inventory
+        run: |
+          cat > inventory.ini << EOF
+          [prod_servers]
+          server ansible_host=${{ secrets.SERVER_HOST }} ansible_port=2222 ansible_user=webdev
+
+          [prod_servers:vars]
+          ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+          EOF
+
       - name: run ansible deploy
-        run: ansible-playbook deploy/ansible/deploy.yml -i deploy/ansible/inventory.ini -e ansible_become_password=${{ secrets.BECOME_PASSWORD }}
+        run: ansible-playbook deploy/ansible/deploy.yml -i inventory.ini -e ansible_become_password=${{ secrets.BECOME_PASSWORD }}
