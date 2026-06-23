@@ -8,11 +8,10 @@
     ansible_port: 2222
     ansible_ssh_private_key_file: "~/.ssh/id_ed25519"
     username: "webdev"
-    ssh_port: 2222
-    db_port: 5432
     db_name: "studs"
-    db_user: "postgres"
-    db_password: "postgres"
+    db_user: "s505205"
+    db_password: "Oc5UQVlhW4HfHtX5"
+    app_dir: /opt/ClientServerApp
 
   vars_prompt:
     - name: ansible_become_password
@@ -20,54 +19,52 @@
       private: yes
 
   tasks:
-    - name: update apt package cache
-      apt:
-        update_cache: yes
-        cache_valid_time: 3600
+    - name: install k3s
+      shell: curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig-mode 644
+      args:
+        creates: /etc/systemd/system/k3s.service
+      timeout: 300
+      retries: 3
+      delay: 5
+      register: k3s_install
+      until: k3s_install.rc == 0
 
-    - name: install required system packages and docker
-      apt:
-        name:
-          - git
-          - neovim
-          - docker.io
-          - docker-compose
-        state: present
+    - name: wait for k3s to be ready
+      command: k3s kubectl get nodes
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+      register: k3s_nodes
+      retries: 12
+      delay: 5
+      until: k3s_nodes.rc == 0
 
-    - name: add user to docker group
-      user:
-        name: "{{ username }}"
-        groups: docker
-        append: yes
-
-    - name: update ufw rules for ssh
-      ufw:
-        rule: allow
-        port: "{{ item.port }}"
-        proto: tcp
-        delete: "{{ item.delete }}"
-      loop:
-        - { port: "{{ ssh_port }}", delete: false }
-        - { port: '22', delete: true }
-
-    - name: clone repository and checkout target branch
+    - name: clone repository
       ansible.builtin.git:
         repo: "https://github.com/FoXeNe/ClientServerApp.git"
-        dest: /opt/ClientServerApp
+        dest: "{{ app_dir }}"
         version: feat/deploy
         force: yes
 
-    - name: generate environment variables file
+    - name: generate secret manifest
       ansible.builtin.copy:
-        dest: /opt/ClientServerApp/.env
+        dest: "{{ app_dir }}/deploy/k8s/secret.yaml"
         content: |
-          DB_PORT={{ db_port }}
-          DB_NAME={{ db_name }}
-          DB_USER={{ db_user }}
-          DB_PASSWORD={{ db_password }}
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: db-secret
+          type: Opaque
+          stringData:
+            DB_USER: "{{ db_user }}"
+            DB_PASSWORD: "{{ db_password }}"
+            POSTGRES_USER: "{{ db_user }}"
+            POSTGRES_PASSWORD: "{{ db_password }}"
+            POSTGRES_DB: "{{ db_name }}"
         mode: '0600'
 
-    - name: start application via docker compose
-      ansible.builtin.command:
-        cmd: docker-compose up -d
-        chdir: /opt/ClientServerApp
+    - name: apply k3s manifests
+      command:
+        cmd: bash script.sh
+        chdir: "{{ app_dir }}/deploy/k8s"
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml

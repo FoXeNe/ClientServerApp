@@ -14,8 +14,8 @@ spec:
     spec:
       containers:
         - name: server
-          image: docker.io/library/serverapp:latest
-          imagePullPolicy: Never
+          image: docker.io/foxene/serverapp:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 45205
             - containerPort: 8081
