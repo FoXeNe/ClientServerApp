@@ -23,3 +23,22 @@ jobs:
           file: server/Dockerfile
           push: true
           tags: foxene/serverapp:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: install ansible
+        run: pip install ansible
+
+      - name: setup ssh key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p 2222 ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: run ansible deploy
+        run: ansible-playbook deploy/ansible/deploy.yml -i deploy/ansible/inventory.ini -e ansible_become_password=${{ secrets.BECOME_PASSWORD }}
